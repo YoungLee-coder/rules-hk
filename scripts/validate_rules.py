@@ -132,15 +132,16 @@ def main() -> int:
         if got not in (None, "DIRECT"):
             errors.append(f"{name} 应已移除分流: {h} -> {got}")
 
-    domestic = [
+    # 未写入 conf 的域名（含中国大陆 AI）应随 FINAL 直连
+    final_direct = [
         "chat.deepseek.com",
         "kimi.ai",
         "qwen.ai",
         "trae.ai",
     ]
-    for h in domestic:
+    for h in final_direct:
         if resolve(h, rules) != "DIRECT":
-            errors.append(f"中国大陆 AI 应 DIRECT: {h} -> {resolve(h, rules)}")
+            errors.append(f"未列域名应 FINAL 直连: {h} -> {resolve(h, rules)}")
 
     general_direct = [
         "www.google.com",
@@ -171,8 +172,8 @@ def main() -> int:
             if "PROXY" in s:
                 errors.append(f"可选规则被意外启用: {s}")
 
-    print(f"策略组规则: {proxy_count}")
-    print(f"DIRECT 规则: {direct_count}")
+    print(f"分流规则（策略组）: {proxy_count}")
+    print(f"显式 DIRECT 规则: {direct_count}")
     print(f"启用规则总数（不含 FINAL）: {proxy_count + direct_count}")
 
     if errors:
