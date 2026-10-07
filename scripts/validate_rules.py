@@ -85,7 +85,7 @@ def main() -> int:
     if not rules or rules[-1][0] != "FINAL" or rules[-1][2] != "DIRECT":
         errors.append("最后一条启用规则必须是 FINAL,DIRECT")
 
-    proxy_count = sum(1 for k, _, p in rules if k != "FINAL" and p.startswith("AI-"))
+    proxy_count = sum(1 for k, _, p in rules if k != "FINAL" and p != "DIRECT")
     direct_count = sum(1 for k, _, p in rules if k != "FINAL" and p == "DIRECT")
 
     cursor_hosts = [
@@ -109,8 +109,8 @@ def main() -> int:
         "accounts.x.ai",
     ]
     for h in cursor_hosts:
-        if resolve(h, rules) not in ("AI-Cursor", "AI-Grok"):
-            errors.append(f"Cursor 应 PROXY: {h} -> {resolve(h, rules)}")
+        if resolve(h, rules) != "AI-Cursor":
+            errors.append(f"Cursor/Grok 应走 AI-Cursor: {h} -> {resolve(h, rules)}")
 
     domestic = [
         "chat.deepseek.com",
@@ -124,18 +124,23 @@ def main() -> int:
     ]
     for h in domestic:
         if resolve(h, rules) != "DIRECT":
-            errors.append(f"国内 AI 应 DIRECT: {h} -> {resolve(h, rules)}")
+            errors.append(f"中国大陆 AI 应 DIRECT: {h} -> {resolve(h, rules)}")
 
     overseas = [
         "chatgpt.com",
         "claude.ai",
         "gemini.google.com",
         "api.openai.com",
-        "perplexity.ai",
+        "grok.com",
     ]
     for h in overseas:
-        if resolve(h, rules)  in (None, "DIRECT"):
-            errors.append(f"海外 AI 应 PROXY: {h} -> {resolve(h, rules)}")
+        if resolve(h, rules) in (None, "DIRECT"):
+            errors.append(f"海外 AI 应走策略组: {h} -> {resolve(h, rules)}")
+
+    if resolve("perplexity.ai", rules) not in (None, "DIRECT"):
+        errors.append(
+            f"Perplexity 应已移除分流: perplexity.ai -> {resolve('perplexity.ai', rules)}"
+        )
 
     general_direct = [
         "www.google.com",
