@@ -10,6 +10,10 @@ from pathlib import Path
 
 CONF = Path(__file__).resolve().parents[1] / "AI-Only-Proxy.conf"
 
+ALLOWED_POLICY_GROUPS = frozenset(
+    {"Cursor", "OpenAI", "Claude", "Gemini", "Krill", "Kiro", "Manus"}
+)
+
 
 def suffix_match(host: str, suffix: str) -> bool:
     host = host.lower().rstrip(".")
@@ -69,8 +73,6 @@ def resolve(host: str, rules: list[tuple[str, str, str]]) -> str | None:
 def main() -> int:
     text = CONF.read_text(encoding="utf-8")
     rules = parse_rules(text)
-    enabled = [r for r in rules if r[0] != "FINAL" or True]
-    # conflicts
     by_target: dict[tuple[str, str], set[str]] = defaultdict(set)
     for kind, target, policy in rules:
         if kind == "FINAL":
@@ -88,72 +90,62 @@ def main() -> int:
     proxy_count = sum(1 for k, _, p in rules if k != "FINAL" and p != "DIRECT")
     direct_count = sum(1 for k, _, p in rules if k != "FINAL" and p == "DIRECT")
 
+    for kind, _, policy in rules:
+        if kind == "FINAL":
+            continue
+        if policy != "DIRECT" and policy not in ALLOWED_POLICY_GROUPS:
+            errors.append(f"未允许的策略组: {policy}")
+
     cursor_hosts = [
         "api2.cursor.sh",
-        "api3.cursor.sh",
-        "api4.cursor.sh",
-        "api5.cursor.sh",
-        "agent.api5.cursor.sh",
-        "agent.global.api5.cursor.sh",
-        "repo42.cursor.sh",
-        "authenticate.cursor.sh",
-        "authenticator.cursor.sh",
-        "prod.authentication.cursor.sh",
-        "foo.authentication.cursor.sh",
-        "us-asia.gcpp.cursor.sh",
-        "marketplace.cursorapi.com",
-        "cursor-cdn.com",
-        "downloads.cursor.com",
-        "anysphere-binaries.s3.us-east-1.amazonaws.com",
         "accounts.spacex.ai",
         "accounts.x.ai",
+        "grok.com",
     ]
     for h in cursor_hosts:
-        if resolve(h, rules) != "AI-Cursor":
-            errors.append(f"Cursor/Grok 应走 AI-Cursor: {h} -> {resolve(h, rules)}")
+        if resolve(h, rules) != "Cursor":
+            errors.append(f"Cursor 应走 Cursor 组: {h} -> {resolve(h, rules)}")
+
+    service_checks = [
+        ("chatgpt.com", "OpenAI"),
+        ("claude.ai", "Claude"),
+        ("gemini.google.com", "Gemini"),
+        ("api.krill-code.net", "Krill"),
+        ("kiro.dev", "Kiro"),
+        ("manus.im", "Manus"),
+    ]
+    for h, group in service_checks:
+        if resolve(h, rules) != group:
+            errors.append(f"{group} 应走 {group} 组: {h} -> {resolve(h, rules)}")
+
+    removed = [
+        ("perplexity.ai", "Perplexity"),
+        ("copilot.microsoft.com", "Copilot"),
+        ("githubcopilot.com", "GitHub Copilot"),
+        ("windsurf.com", "Windsurf"),
+        ("poe.com", "Poe"),
+        ("midjourney.com", "Midjourney"),
+        ("devin.ai", "Devin"),
+    ]
+    for h, name in removed:
+        got = resolve(h, rules)
+        if got not in (None, "DIRECT"):
+            errors.append(f"{name} 应已移除分流: {h} -> {got}")
 
     domestic = [
         "chat.deepseek.com",
         "kimi.ai",
         "qwen.ai",
         "trae.ai",
-        "z.ai",
-        "qoder.com",
-        "lovart.ai",
-        "tripo3d.ai",
     ]
     for h in domestic:
         if resolve(h, rules) != "DIRECT":
             errors.append(f"中国大陆 AI 应 DIRECT: {h} -> {resolve(h, rules)}")
 
-    overseas = [
-        "chatgpt.com",
-        "claude.ai",
-        "gemini.google.com",
-        "api.openai.com",
-        "grok.com",
-    ]
-    for h in overseas:
-        if resolve(h, rules) in (None, "DIRECT"):
-            errors.append(f"海外 AI 应走策略组: {h} -> {resolve(h, rules)}")
-
-    if resolve("perplexity.ai", rules) not in (None, "DIRECT"):
-        errors.append(
-            f"Perplexity 应已移除分流: perplexity.ai -> {resolve('perplexity.ai', rules)}"
-        )
-
     general_direct = [
         "www.google.com",
-        "mail.google.com",
-        "www.youtube.com",
-        "www.bing.com",
         "github.com",
-        "www.microsoft.com",
-        "www.apple.com",
-        "www.baidu.com",
-        "www.taobao.com",
         "x.com",
-        "twitter.com",
     ]
     for h in general_direct:
         if resolve(h, rules) != "DIRECT":
@@ -179,7 +171,7 @@ def main() -> int:
             if "PROXY" in s:
                 errors.append(f"可选规则被意外启用: {s}")
 
-    print(f"PROXY 规则: {proxy_count}")
+    print(f"策略组规则: {proxy_count}")
     print(f"DIRECT 规则: {direct_count}")
     print(f"启用规则总数（不含 FINAL）: {proxy_count + direct_count}")
 
