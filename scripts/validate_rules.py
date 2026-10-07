@@ -85,7 +85,7 @@ def main() -> int:
     if not rules or rules[-1][0] != "FINAL" or rules[-1][2] != "DIRECT":
         errors.append("最后一条启用规则必须是 FINAL,DIRECT")
 
-    proxy_count = sum(1 for k, _, p in rules if k != "FINAL" and p == "PROXY")
+    proxy_count = sum(1 for k, _, p in rules if k != "FINAL" and p.startswith("AI-"))
     direct_count = sum(1 for k, _, p in rules if k != "FINAL" and p == "DIRECT")
 
     cursor_hosts = [
@@ -109,7 +109,7 @@ def main() -> int:
         "accounts.x.ai",
     ]
     for h in cursor_hosts:
-        if resolve(h, rules) != "PROXY":
+        if resolve(h, rules) not in ("AI-Cursor", "AI-Grok"):
             errors.append(f"Cursor 应 PROXY: {h} -> {resolve(h, rules)}")
 
     domestic = [
@@ -134,7 +134,7 @@ def main() -> int:
         "perplexity.ai",
     ]
     for h in overseas:
-        if resolve(h, rules) != "PROXY":
+        if resolve(h, rules)  in (None, "DIRECT"):
             errors.append(f"海外 AI 应 PROXY: {h} -> {resolve(h, rules)}")
 
     general_direct = [
