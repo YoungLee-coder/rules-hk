@@ -113,6 +113,8 @@ def main() -> int:
         ("api.krill-code.net", "Krill"),
         ("kiro.dev", "Kiro"),
         ("manus.im", "Manus"),
+        ("api.manus.ai", "Manus"),
+        ("manus.computer", "Manus"),
     ]
     for h, group in service_checks:
         if resolve(h, rules) != group:
