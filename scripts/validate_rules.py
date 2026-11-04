@@ -120,6 +120,34 @@ def main() -> int:
         if resolve(h, rules) != group:
             errors.append(f"{group} 应走 {group} 组: {h} -> {resolve(h, rules)}")
 
+    claude_hosts = [
+        "api.anthropic.com",
+        "platform.claude.com",
+        "downloads.claude.ai",
+        "bridge.claudeusercontent.com",
+        "abc.livepreview.claude.app",
+        "anthropic.com.cdn.cloudflare.net",
+        "anthropic.auth0.com",
+        "http-intake.logs.us5.datadoghq.com",
+        "browser-intake-us5-datadoghq.com",
+    ]
+    for h in claude_hosts:
+        if resolve(h, rules) != "Claude":
+            errors.append(f"Claude 应走 Claude 组: {h} -> {resolve(h, rules)}")
+
+    ip_kinds = {"IP-CIDR", "IP-CIDR6", "IP-ASN"}
+    in_rule = False
+    for line in text.split("# 可选兼容规则", 1)[0].splitlines():
+        s = line.strip()
+        if s == "[Rule]":
+            in_rule = True
+            continue
+        if not in_rule or not s or s.startswith("#"):
+            continue
+        parts = [p.strip() for p in s.split(",")]
+        if parts[0] in ip_kinds and parts[-1] != "no-resolve":
+            errors.append(f"IP 规则须带 no-resolve: {s}")
+
     removed = [
         ("perplexity.ai", "Perplexity"),
         ("copilot.microsoft.com", "Copilot"),
@@ -149,6 +177,9 @@ def main() -> int:
         "www.google.com",
         "github.com",
         "x.com",
+        "app.datadoghq.com",
+        "sentry.io",
+        "api.intercom.io",
     ]
     for h in general_direct:
         if resolve(h, rules) != "DIRECT":
@@ -165,14 +196,13 @@ def main() -> int:
 
     optional_block = text.split("# 可选兼容规则", 1)
     if len(optional_block) > 1:
-        for line in optional_block[1].splitlines():
+        for line in optional_block[1].splitlines()[1:]:
             s = line.strip()
             if s.startswith("FINAL,"):
                 break
             if not s or s.startswith("#"):
                 continue
-            if "PROXY" in s:
-                errors.append(f"可选规则被意外启用: {s}")
+            errors.append(f"可选规则被意外启用: {s}")
 
     print(f"分流规则（策略组）: {proxy_count}")
     print(f"显式 DIRECT 规则: {direct_count}")

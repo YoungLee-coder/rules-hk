@@ -48,6 +48,7 @@ Cursor 暂不支持从仓库自动覆盖自动化 Prompt。每次合并本文件
 - 不要整站代理 google.com、github.com、microsoft.com、cloudflare.com 等共享平台。
 - Gemini 等仍用窄域规则；共享登录/CDN 默认保持可选兼容段注释关闭。
 - 不要使用 DOMAIN-KEYWORD 等宽泛规则。
+- 允许保留厂商自有 IP 段兜底（目前仅 Claude：Anthropic 的 IP-CIDR / IP-CIDR6 / IP-ASN），必须带 no-resolve 并放在全部域名规则之后；以 https://platform.claude.com/docs/en/api/ip-addresses 为准核对。
 
 六、修改与交付
 
