@@ -11,7 +11,7 @@ from pathlib import Path
 CONF = Path(__file__).resolve().parents[1] / "AI-Only-Proxy.conf"
 
 ALLOWED_POLICY_GROUPS = frozenset(
-    {"Cursor", "OpenAI", "Claude", "Gemini", "Krill", "Kiro", "Manus"}
+    {"Cursor", "OpenAI", "Claude", "Gemini", "Krill", "Kiro", "Manus", "Muse"}
 )
 
 
@@ -115,6 +115,8 @@ def main() -> int:
         ("manus.im", "Manus"),
         ("api.manus.ai", "Manus"),
         ("manus.computer", "Manus"),
+        ("muse.ai", "Muse"),
+        ("www.muse.ai", "Muse"),
     ]
     for h, group in service_checks:
         if resolve(h, rules) != group:
@@ -180,6 +182,8 @@ def main() -> int:
         "app.datadoghq.com",
         "sentry.io",
         "api.intercom.io",
+        "www.facebook.com",
+        "www.meta.com",
     ]
     for h in general_direct:
         if resolve(h, rules) != "DIRECT":
@@ -188,6 +192,7 @@ def main() -> int:
     false_pos = [
         ("cursor.sh.example.com", "DIRECT"),
         ("notcursor.sh", "DIRECT"),
+        ("amuse.ai", "DIRECT"),
     ]
     for h, want in false_pos:
         got = resolve(h, rules)

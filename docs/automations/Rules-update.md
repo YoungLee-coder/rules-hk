@@ -19,8 +19,8 @@ Cursor 暂不支持从仓库自动覆盖自动化 Prompt。每次合并本文件
 
 一、当前产品范围（必须遵守）
 
-1. 仅维护 7 个海外服务的分流与策略组：Cursor（含 Grok/xAI 登录域）、OpenAI、Claude、Gemini、Krill、Kiro、Manus。
-2. 策略组名称不含 AI 前缀：Cursor、OpenAI、Claude、Gemini、Krill、Kiro、Manus。
+1. 仅维护 8 个海外服务的分流与策略组：Cursor（含 Grok/xAI 登录域）、OpenAI、Claude、Gemini、Krill、Kiro、Manus、Muse（Meta 个人 AI 智能体）。
+2. 策略组名称不含 AI 前缀：Cursor、OpenAI、Claude、Gemini、Krill、Kiro、Manus、Muse。
 3. conf 里只写需要走代理的域名规则；不要写入中国大陆 AI 的显式 DIRECT 规则。DeepSeek、Kimi、通义等未列域名一律由 FINAL,DIRECT 直连。
 4. 不要恢复已移除的服务分流（Perplexity、Copilot、GitHub Copilot、Windsurf、Poe、Midjourney、Devin 等），除非用户在本次运行中明确要求。
 5. PROXY 表示跟随 Shadowrocket 首页当前节点；不要添加或修改节点、订阅或凭据。不启用 HTTPS 解密，不引入远程规则集或与本任务无关的规则。
@@ -30,7 +30,7 @@ Cursor 暂不支持从仓库自动覆盖自动化 Prompt。每次合并本文件
 - 服务组格式：Name = select,DIRECT,PROXY,Name-选节点,policy-select-name=PROXY
 - 节点子组格式：Name-选节点 = select,policy-regex-filter=.*
 - 禁止在同一行同时写 DIRECT、PROXY 与 policy-regex-filter（否则界面只剩订阅节点，没有直连和跟随主节点）。
-- 规则第三列策略名须与策略组名一致（如 ,Cursor、,OpenAI、,Kiro、,Manus）。
+- 规则第三列策略名须与策略组名一致（如 ,Cursor、,OpenAI、,Kiro、,Manus、,Muse）。
 
 三、先读仓库内 SSOT
 
@@ -39,13 +39,13 @@ Cursor 暂不支持从仓库自动覆盖自动化 Prompt。每次合并本文件
 
 四、联网核查域名
 
-优先厂商官方 network / firewall / sign-in / API 文档。至少核对 7 个服务及其登录、CDN、更新域是否仍有效；Cursor 须覆盖 api2–api5、authentication、repo42、spacex.ai、x.ai 等官方列表。
+优先厂商官方 network / firewall / sign-in / API 文档。至少核对 8 个服务及其登录、CDN、更新域是否仍有效；Cursor 须覆盖 api2–api5、authentication、repo42、spacex.ai、x.ai 等官方列表。
 
 新增或修改域名须有可追溯来源；未核实项写入更新记录，不得声称已全部确认。单次 DNS/HTTP 失败不能作为删除域名的唯一依据。
 
 五、代理范围控制
 
-- 不要整站代理 google.com、github.com、microsoft.com、cloudflare.com 等共享平台。
+- 不要整站代理 google.com、github.com、microsoft.com、cloudflare.com、facebook.com、fbcdn.net 等共享平台。
 - Gemini 等仍用窄域规则；共享登录/CDN 默认保持可选兼容段注释关闭。
 - 不要使用 DOMAIN-KEYWORD 等宽泛规则。
 - 允许保留厂商自有 IP 段兜底（目前仅 Claude：Anthropic 的 IP-CIDR / IP-CIDR6 / IP-ASN），必须带 no-resolve 并放在全部域名规则之后；以 https://platform.claude.com/docs/en/api/ip-addresses 为准核对。
@@ -54,7 +54,7 @@ Cursor 暂不支持从仓库自动覆盖自动化 Prompt。每次合并本文件
 
 1. 更新 AI-Only-Proxy.conf；同步 使用说明.md；在 outputs/更新记录.md 追加本次摘要（日期、变更、来源、未核实项、验证结果）。
 2. 运行 python3 scripts/validate_rules.py，必须全部通过。
-3. 验证要点：7 组策略名合法；Cursor/Grok 走 Cursor 组；无 Perplexity 等已删服务；未列域名（如 kimi.ai）走 FINAL 直连；FINAL,DIRECT 在最后。
+3. 验证要点：8 组策略名合法；Cursor/Grok 走 Cursor 组；无 Perplexity 等已删服务；未列域名（如 kimi.ai）走 FINAL 直连；FINAL,DIRECT 在最后。
 
 七、Git 与 PR
 
